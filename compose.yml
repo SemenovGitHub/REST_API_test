@@ -6,6 +6,8 @@ services:
       POSTGRES_PASSWORD: testjob
       POSTGRES_DB: testjob
       POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+    ports:
+      - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql
     healthcheck:
@@ -40,15 +42,13 @@ services:
     image: mcr.microsoft.com/dotnet/sdk:10.0
     working_dir: /src
     environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      ASPNETCORE_URLS: http://+:8080
+      ASPNETCORE_ENVIRONMENT: Production
       DOTNET_CLI_TELEMETRY_OPTOUT: "1"
       DOTNET_NOLOGO: "1"
-      ConnectionStrings__Postgres: Host=postgres;Port=5432;Database=testjob;Username=testjob;Password=testjob
     volumes:
       - ./:/src
     command: >
-      dotnet run --project src/TestJob.Api/TestJob.Api.csproj --no-launch-profile --urls http://+:8080
+      dotnet run --project src/TestJob.Api/TestJob.Api.csproj -c Release --no-launch-profile
       -p:BaseIntermediateOutputPath=/tmp/testjob/obj/
       -p:BaseOutputPath=/tmp/testjob/bin/
     ports:
