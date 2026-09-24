@@ -31,14 +31,18 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.WriteIndented = true;
         options.JsonSerializerOptions.Encoder = JavaScriptEncoder.Create(UnicodeRanges.All);
     });
+var swagger = builder.Configuration.GetSection("Swagger");
+var swaggerRoutePrefix = swagger["RoutePrefix"]!;
+var swaggerEndpoint = swagger["Endpoint"]!;
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
     options.EnableAnnotations();
-    options.SwaggerDoc("v1", new OpenApiInfo
+    options.SwaggerDoc(swagger["Version"], new OpenApiInfo
     {
-        Title = "TestJob",
-        Version = "v1"
+        Title = swagger["Title"],
+        Version = swagger["Version"]
     });
 });
 
@@ -48,12 +52,12 @@ await EnsureElementsTableAsync(app.Services);
 
 app.UseSwagger(options =>
 {
-    options.RouteTemplate = "api/swagger/{documentName}/swagger.json";
+    options.RouteTemplate = $"{swaggerRoutePrefix}/{{documentName}}/swagger.json";
 });
 app.UseSwaggerUI(options =>
 {
-    options.RoutePrefix = "api/swagger";
-    options.SwaggerEndpoint("/api/swagger/v1/swagger.json", "TestJob");
+    options.RoutePrefix = swaggerRoutePrefix;
+    options.SwaggerEndpoint(swaggerEndpoint, swagger["Title"]);
 });
 app.MapControllers();
 app.Run();
