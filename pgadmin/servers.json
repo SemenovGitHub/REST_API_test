@@ -1,0 +1,16 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "testjob",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "testjob",
+      "Username": "testjob",
+      "Password": "testjob",
+      "SavePassword": true,
+      "SSLMode": "prefer",
+      "PassFile": "/var/lib/pgadmin/pgpass"
+    }
+  }
+}

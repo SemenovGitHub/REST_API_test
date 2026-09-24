@@ -1,0 +1,61 @@
+services:
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: testjob
+      POSTGRES_PASSWORD: testjob
+      POSTGRES_DB: testjob
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U testjob -d testjob"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@pgadmin.org
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+      PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION: "False"
+      PGADMIN_REPLACE_SERVERS_ON_STARTUP: "True"
+      PGADMIN_SERVER_JSON_FILE: /pgadmin4/servers.json
+    ports:
+      - "8080:80"
+    volumes:
+      - ./pgadmin/servers.json:/pgadmin4/servers.json:ro
+      - ./pgadmin/pgpass:/pgpassfile:ro
+      - ./pgadmin/entrypoint.sh:/pgadmin-entrypoint.sh:ro
+    user: "0:0"
+    entrypoint: ["/bin/sh", "/pgadmin-entrypoint.sh"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    image: mcr.microsoft.com/dotnet/sdk:10.0
+    working_dir: /src
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_NOLOGO: "1"
+      ConnectionStrings__Postgres: Host=postgres;Port=5432;Database=testjob;Username=testjob;Password=testjob
+    volumes:
+      - ./:/src
+    command: >
+      dotnet run --project src/TestJob.Api/TestJob.Api.csproj --no-launch-profile --urls http://+:8080
+      -p:BaseIntermediateOutputPath=/tmp/testjob/obj/
+      -p:BaseOutputPath=/tmp/testjob/bin/
+    ports:
+      - "8090:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:
