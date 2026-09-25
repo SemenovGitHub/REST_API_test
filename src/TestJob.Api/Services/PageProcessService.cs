@@ -27,9 +27,9 @@ public sealed class PageProcessService : IPageProcessService
     private static readonly UTF8Encoding Utf8 = new(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
 
     private const string InsertSql = """
-        INSERT INTO elements (attribute_value, html)
-        VALUES (@AttributeValue, @Html)
-        """;
+                                     INSERT INTO elements (attribute_value, html)
+                                     VALUES (@AttributeValue, @Html)
+                                     """;
 
     private readonly IValidator<ProcessRequest> _validator;
     private readonly NpgsqlDataSource _dataSource;
@@ -166,16 +166,23 @@ public sealed class PageProcessService : IPageProcessService
         }
 
         await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken);
+
+        await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
+
         await connection.ExecuteAsync(new CommandDefinition(
             InsertSql,
             elements,
+            transaction: transaction,
             cancellationToken: cancellationToken));
+
+        await transaction.CommitAsync(cancellationToken);
     }
 
     private static List<string> FindEmails(string page)
     {
         return EmailRegex.Matches(page)
             .Select(match => match.Value)
+            .Distinct()
             .ToList();
     }
 

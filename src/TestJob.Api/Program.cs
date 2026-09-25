@@ -50,10 +50,7 @@ var app = builder.Build();
 
 await EnsureElementsTableAsync(app.Services);
 
-app.UseSwagger(options =>
-{
-    options.RouteTemplate = $"{swaggerRoutePrefix}/{{documentName}}/swagger.json";
-});
+app.UseSwagger(options => { options.RouteTemplate = $"{swaggerRoutePrefix}/{{documentName}}/swagger.json"; });
 app.UseSwaggerUI(options =>
 {
     options.RoutePrefix = swaggerRoutePrefix;
@@ -67,10 +64,10 @@ static async Task EnsureElementsTableAsync(IServiceProvider services)
     var dataSource = services.GetRequiredService<NpgsqlDataSource>();
     await using var connection = await dataSource.OpenConnectionAsync();
     await connection.ExecuteAsync("""
-        CREATE TABLE IF NOT EXISTS elements (
-            id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-            attribute_value text NOT NULL,
-            html text NOT NULL
-        );
-        """);
+                                  CREATE TABLE IF NOT EXISTS elements (
+                                      id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+                                      attribute_value text NOT NULL,
+                                      html text NOT NULL
+                                  );
+                                  """);
 }
